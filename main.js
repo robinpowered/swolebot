@@ -141,7 +141,7 @@ function run() {
 // Start the timer!
 hours.forEach(function (hour) {
 	new CronJob({
-		cronTime: '00 33 ' + hour + ' * * ' + ((runInWeekends) ? '*' : '1-5'),
+		cronTime: '00 00 ' + hour + ' * * ' + ((runInWeekends) ? '*' : '1-5'),
 		onTick: run,
 		start: true,
 		timeZone: timezone
