@@ -97,8 +97,10 @@ function getRepos(callback) {
 
 hours.forEach(function (hour) {//1-5
 	job = new CronJob({
-		cronTime: '00 00 ' + hour + ' * * *',
-		onTick: run
+		cronTime: '00 05 ' + hour + ' * * *',
+		onTick: run,
+		start: false,
+		timeZone: "America/New_York"
 	});
 	job.start();
 });
