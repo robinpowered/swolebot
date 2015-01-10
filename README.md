@@ -21,6 +21,7 @@ Configure Heroku environment variables:
 ```
 SLACK_API_TOKEN - required
 GITHUB_API_TOKEN - required
+REPOS - required. Uses comma-separated format. Eg. 'jutaz/swolebot,robinpowered'. You can specify repo, or whole ORG.
 SLACK_CHANNEL - required. Defaults to #general
 SLACK_ICON - An URL to Swolebot avatar, if you do not like default ones
 SLACK_USERNAME - Meh. Default: Swolebot
