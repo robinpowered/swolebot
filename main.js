@@ -13,7 +13,7 @@ var slackIcon = process.env.SLACK_ICON || "http://4.bp.blogspot.com/-9TT2oDIQ00k
 var slackUsername = process.env.SLACK_USERNAME || "Swolebot";
 var messageTemplate = "@channel: %s pushups!";
 var ratio = process.env.RATIO || 2;
-var hours = [11, 14, 20];
+var hours = (typeof process.env.HOURS !== undefined) ? process.env.HOURS.split(',') : [11, 14, 20];
 var repos;
 
 if (process.env.REPOS) {
@@ -96,7 +96,6 @@ function getRepos(callback) {
 }
 
 hours.forEach(function (hour) {//1-5
-	console.log(hour);
 	job = new CronJob({
 		cronTime: '00 00 ' + hour + ' * * *',
 		onTick: run
