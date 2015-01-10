@@ -3,6 +3,7 @@ var async = require('async');
 var GitHubApi = require("github");
 var CronJob = require('cron').CronJob;
 var format = require('util').format;
+var q = require('q');
 
 var apiToken = process.env.SLACK_API_TOKEN;
 var githubApiToken = process.env.GITHUB_API_TOKEN;
@@ -13,6 +14,7 @@ var messageTemplate = "@channel: %s pushups!";
 var ratio = process.env.RATIO || 2;
 var hours = (typeof process.env.HOURS !== 'undefined') ? process.env.HOURS.split(',') : [11, 14, 17];
 var timezone = process.env.TIMEZONE || "America/New_York";
+var runInWeekends = (process.env.WEEKENDS) || false;
 var repos;
 
 if (process.env.REPOS) {
@@ -34,17 +36,16 @@ github.authenticate({
 });
 
 function postMessage(message, callback) {
-	slack.api("chat.postMessage", {
+	return q.ninvoke(slack, 'api', "chat.postMessage", {
 		channel: channel,
 		text: message,
 		username: slackUsername,
 		link_names: 1,
 		icon_url: slackIcon
-	}, callback);
+	});
 }
 
-function githubCall(isOrg, user, cb, prev, page) {
-	var fn = (isOrg) ? github.repos.getFromOrg : github.repos.getFromUser;
+function githubCall(isOrg, user, prev, page) {
 	var params = {
 		per_page: 100,
 		type: isOrg ? 'member' : 'owner',
@@ -55,70 +56,55 @@ function githubCall(isOrg, user, cb, prev, page) {
 	} else {
 		params.user = user;
 	}
-	fn(params, function (err, data) {
+	if (!prev) {
+		prev = [];
+		page = 0;
+	}
+	return q.ninvoke(github.repos, (isOrg) ? 'getFromOrg' : 'getFromUser', params).then(function (data) {
 		var repos = data.map(function (repo) {
 			return repo.full_name;
 		});
-		if (prev) {
-			repos = prev.concat(repos);
-		}
 		if (repos.length === 100) { // Assume we go to next page
-			if (!page) {
-				page = 0;
-			}
-			githubCall(isOrg, user, cb, repos, page++);
-			return;
+			page = ++page;
+			return githubCall(isOrg, user, prev.concat(repos), page);
 		}
-		cb(null, repos);
+		return prev.concat(repos);
 	});
 }
 
 function getPRs(user, repo, callback) {
-	github.pullRequests.getAll({
+	return q.ninvoke(github.pullRequests, 'getAll', {
 		user: user,
 		repo: repo,
 		state: 'open',
 		per_page: 100
-	}, function (err, data) {
-		callback(data.length);
+	}).then(function (data) {
+		return data.length;
 	});
 }
 
 function isOrg(username, callback) {
-	github.user.getFrom({
+	return q.ninvoke(github.user, 'getFrom', {
 		user: username
-	}, function (err, data) {
-		callback((data.type === 'Organization'));
+	}).then(function (data) {
+		return (data.type === 'Organization');
 	});
 }
 
-function getRepos(callback) {
-	var ret = [];
-
-	async.map(repos, function (repo, cb) {
+function getRepos() {
+	return q.ninvoke(async, 'map', repos, function (repo, cb) {
 		if (repo.indexOf('/') > -1) {
-			cb(null, repo);
-		} else {
-			isOrg(repo, function (isOrg) {
-				githubCall(isOrg, repo, cb);
-			});
+			return cb(null, repo);
 		}
-	}, callback);
-}
-
-hours.forEach(function (hour) {
-	job = new CronJob({
-		cronTime: '00 00 ' + hour + ' * * 1-5',
-		onTick: run,
-		start: false,
-		timeZone: timezone
+		return isOrg(repo).then(function (isOrg) {
+			return githubCall(isOrg, repo);
+		}).then(cb.bind(cb, null));
 	});
-	job.start();
-});
+}
 
 function run() {
 	console.log('Started!');
-	getRepos(function (err, data) {
+	getRepos().then(function (data) {
 		var arr = [];
 		data.forEach(function (items) {
 			if (Array.isArray(items)) {
@@ -127,20 +113,37 @@ function run() {
 				arr.push(items);
 			}
 		});
-		async.map(arr, function (data, callback) {
+		// We want to make sure, that we will make no more pushups than we 'want'
+		return arr.filter(function(item, pos) {
+			return arr.indexOf(item) === pos && arr.lastIndexOf(item) === pos;
+		});
+	}).then(function (arr) {
+		return q.ninvoke(async, 'map', arr, function (data, callback) {
 			var str = data.split('/');
-			getPRs(str[0], str[1], function (nums) {
+			getPRs(str[0], str[1]).then(function (nums) {
 				callback(null, nums);
 			});
-		}, function (err, data) {
-			var amount = 0;
-			data.forEach(function (num) {
-				amount += num;
-			});
-			amount = amount * ratio;
-			postMessage(format(messageTemplate, amount), function () {
-				console.log("Done!");
-			});
 		});
+	}).then(function (data) {
+		var amount = 0;
+		data.forEach(function (num) {
+			amount += num;
+		});
+		amount = amount * ratio;
+		return postMessage(format(messageTemplate, amount));
+	}).then(function () {
+		console.log("Done!");
+	}).catch(function (err) {
+		console.error(err);
 	});
 }
+
+// Start the timer!
+hours.forEach(function (hour) {
+	new CronJob({
+		cronTime: '00 33 ' + hour + ' * * ' + ((runInWeekends) ? '*' : '1-5'),
+		onTick: run,
+		start: true,
+		timeZone: timezone
+	});
+});
