@@ -34,7 +34,7 @@ function postMessage(message, callback) {
 		text: message,
 		username: "Swolebot",
 		link_names: 1,
-		icon_url: "http://www.muscleprodigy.com/content/articles/home/how-pushups-can-burn-fat-1569.jpg"
+		icon_url: "http://4.bp.blogspot.com/-9TT2oDIQ00k/TqVViEko4HI/AAAAAAAAADU/svUOHDxP6UM/s1600/T-rex-hates-push-ups.jpg"
 	}, callback);
 }
 
