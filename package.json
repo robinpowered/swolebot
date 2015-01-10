@@ -22,6 +22,7 @@
   "homepage": "https://github.com/jutaz/swolebot",
   "dependencies": {
     "async": "^0.9.0",
+    "cron": "^1.0.5",
     "github": "^0.2.3",
     "koa": "^0.14.0",
     "slack-node": "0.0.93"

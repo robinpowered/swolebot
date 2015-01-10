@@ -2,16 +2,26 @@ var koa = require('koa');
 var Slack = require('slack-node');
 var async = require('async');
 var GitHubApi = require("github");
+var CronJob = require('cron').CronJob;
+var format = require('util').format;
 var app = koa();
 
 var apiToken = process.env.SLACK_API_TOKEN;
 var githubApiToken = process.env.GITHUB_API_TOKEN;
 var channel = process.env.SLACK_CHANNEL || "#general";
+var slackIcon = process.env.SLACK_ICON || "http://4.bp.blogspot.com/-9TT2oDIQ00k/TqVViEko4HI/AAAAAAAAADU/svUOHDxP6UM/s1600/T-rex-hates-push-ups.jpg";
+var slackUsername = process.env.SLACK_USERNAME || "Swolebot";
+var messageTemplate = "@channel: %s pushups!";
+var ratio = process.env.RATIO || 2;
+var hours = [11, 14, 20];
+var repos;
 
-var repos = [
-	'robinpowered/robin-dashboard',
-	'jutaz/deploy'
-];
+if (process.env.REPOS) {
+	repos = process.env.REPOS.split(',');
+} else {
+	repos = [];
+}
+
 var slack = new Slack(apiToken);
 var github = new GitHubApi({
 	version: "3.0.0",
@@ -32,9 +42,9 @@ function postMessage(message, callback) {
 	slack.api("chat.postMessage", {
 		channel: channel,
 		text: message,
-		username: "Swolebot",
+		username: slackUsername,
 		link_names: 1,
-		icon_url: "http://4.bp.blogspot.com/-9TT2oDIQ00k/TqVViEko4HI/AAAAAAAAADU/svUOHDxP6UM/s1600/T-rex-hates-push-ups.jpg"
+		icon_url: slackIcon
 	}, callback);
 }
 
@@ -85,30 +95,42 @@ function getRepos(callback) {
 	}, callback);
 }
 
-getRepos(function (err, data) {
-	var arr = [];
-	data.forEach(function (items) {
-		if (Array.isArray(items)) {
-			arr = arr.concat(items);
-		} else {
-			arr.push(items);
-		}
+hours.forEach(function (hour) {//1-5
+	console.log(hour);
+	job = new CronJob({
+		cronTime: '00 51 ' + hour + ' * * *',
+		onTick: run
 	});
-	console.log(arr);
-	async.map(arr, function (data, callback) {
-		var str = data.split('/');
-		getPRs(str[0], str[1], function (nums) {
-			callback(null, nums);
-		});
-	}, function (err, data) {
-		var amount = 0;
-		data.forEach(function (num) {
-			amount += num;
-		});
-		postMessage("@channel: " + amount + " pushups!", function () {
-			console.log("done!");
-		});
-	});
+	job.start();
 });
+
+function run() {
+	console.log('started');
+	getRepos(function (err, data) {
+		var arr = [];
+		data.forEach(function (items) {
+			if (Array.isArray(items)) {
+				arr = arr.concat(items);
+			} else {
+				arr.push(items);
+			}
+		});
+		async.map(arr, function (data, callback) {
+			var str = data.split('/');
+			getPRs(str[0], str[1], function (nums) {
+				callback(null, nums);
+			});
+		}, function (err, data) {
+			var amount = 0;
+			data.forEach(function (num) {
+				amount += num;
+			});
+			amount = amount * ratio;
+			postMessage(format(messageTemplate, amount), function () {
+				console.log("Done!");
+			});
+		});
+	});
+}
 
 app.listen(process.env.PORT || 3000);
