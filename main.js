@@ -14,6 +14,7 @@ var slackUsername = process.env.SLACK_USERNAME || "Swolebot";
 var messageTemplate = "@channel: %s pushups!";
 var ratio = process.env.RATIO || 2;
 var hours = (typeof process.env.HOURS !== undefined) ? process.env.HOURS.split(',') : [11, 14, 20];
+var timezone = process.env.TIMEZONE || "America/New_York";
 var repos;
 
 if (process.env.REPOS) {
@@ -100,7 +101,7 @@ hours.forEach(function (hour) {//1-5
 		cronTime: '00 05 ' + hour + ' * * *',
 		onTick: run,
 		start: false,
-		timeZone: "America/New_York"
+		timeZone: timezone
 	});
 	job.start();
 });
