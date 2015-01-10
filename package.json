@@ -4,7 +4,8 @@
   "description": "A slack bot for keeping your team fit",
   "main": "main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node --harmony main.js"
   },
   "repository": {
     "type": "git",
@@ -15,5 +16,13 @@
   "bugs": {
     "url": "https://github.com/jutaz/swolebot/issues"
   },
-  "homepage": "https://github.com/jutaz/swolebot"
+  "engines": {
+    "node": "^0.11.9"
+  },
+  "homepage": "https://github.com/jutaz/swolebot",
+  "dependencies": {
+    "github": "^0.2.3",
+    "koa": "^0.14.0",
+    "slack-node": "0.0.93"
+  }
 }
