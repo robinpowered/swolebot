@@ -5,4 +5,4 @@ app.use(function *(){
 	this.body = 'Its alive!';
 });
 
-app.listen(3000);
+app.listen(process.ENV.port || 3000);
