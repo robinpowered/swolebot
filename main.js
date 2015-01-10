@@ -1,10 +1,8 @@
-var koa = require('koa');
 var Slack = require('slack-node');
 var async = require('async');
 var GitHubApi = require("github");
 var CronJob = require('cron').CronJob;
 var format = require('util').format;
-var app = koa();
 
 var apiToken = process.env.SLACK_API_TOKEN;
 var githubApiToken = process.env.GITHUB_API_TOKEN;
@@ -13,7 +11,7 @@ var slackIcon = process.env.SLACK_ICON || "http://4.bp.blogspot.com/-9TT2oDIQ00k
 var slackUsername = process.env.SLACK_USERNAME || "Swolebot";
 var messageTemplate = "@channel: %s pushups!";
 var ratio = process.env.RATIO || 2;
-var hours = (typeof process.env.HOURS !== undefined) ? process.env.HOURS.split(',') : [11, 14, 20];
+var hours = (typeof process.env.HOURS !== 'undefined') ? process.env.HOURS.split(',') : [11, 14, 20];
 var timezone = process.env.TIMEZONE || "America/New_York";
 var repos;
 
@@ -22,6 +20,8 @@ if (process.env.REPOS) {
 } else {
 	repos = []; // You may want to define repos here also.
 }
+
+console.log(process.env);
 
 var slack = new Slack(apiToken);
 var github = new GitHubApi({
@@ -35,10 +35,6 @@ github.authenticate({
 	token: githubApiToken
 });
 
-app.use(function *(){
-	this.body = 'Its alive!';
-});
-
 function postMessage(message, callback) {
 	slack.api("chat.postMessage", {
 		channel: channel,
@@ -49,13 +45,19 @@ function postMessage(message, callback) {
 	}, callback);
 }
 
-function githubCall(user, cb, prev, page) {
-	github.repos.getFromUser({
-		user: user,
+function githubCall(isOrg, user, cb, prev, page) {
+	var fn = (isOrg) ? github.repos.getFromOrg : github.repos.getFromUser;
+	var params = {
 		per_page: 100,
-		type: 'owner',
+		type: isOrg ? 'member' : 'owner',
 		page: page
-	}, function (err, data) {
+	};
+	if (isOrg) {
+		params.org = user;
+	} else {
+		params.user = user;
+	}
+	fn(params, function (err, data) {
 		var repos = data.map(function (repo) {
 			return repo.full_name;
 		});
@@ -66,7 +68,7 @@ function githubCall(user, cb, prev, page) {
 			if (!page) {
 				page = 0;
 			}
-			githubCall(user, cb, repos, page++);
+			githubCall(isOrg, user, cb, repos, page++);
 			return;
 		}
 		cb(null, repos);
@@ -84,6 +86,14 @@ function getPRs(user, repo, callback) {
 	});
 }
 
+function isOrg(username, callback) {
+	github.user.getFrom({
+		user: username
+	}, function (err, data) {
+		callback((data.type === 'Organization'));
+	});
+}
+
 function getRepos(callback) {
 	var ret = [];
 
@@ -91,14 +101,16 @@ function getRepos(callback) {
 		if (repo.indexOf('/') > -1) {
 			cb(null, repo);
 		} else {
-			githubCall(repo, cb);
+			isOrg(repo, function (isOrg) {
+				githubCall(isOrg, repo, cb);
+			});
 		}
 	}, callback);
 }
 
 hours.forEach(function (hour) {//1-5
 	job = new CronJob({
-		cronTime: '00 05 ' + hour + ' * * *',
+		cronTime: '00 50 ' + hour + ' * * *',
 		onTick: run,
 		start: false,
 		timeZone: timezone
@@ -134,5 +146,3 @@ function run() {
 		});
 	});
 }
-
-app.listen(process.env.PORT || 3000);
