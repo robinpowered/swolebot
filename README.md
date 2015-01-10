@@ -35,4 +35,6 @@ Push to Heroku
 git push heroku master
 ```
 
+__P.S. Don\`t worry, this will only run on workdays!__
+
 Be fit!

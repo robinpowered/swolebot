@@ -11,7 +11,7 @@ var slackIcon = process.env.SLACK_ICON || "http://4.bp.blogspot.com/-9TT2oDIQ00k
 var slackUsername = process.env.SLACK_USERNAME || "Swolebot";
 var messageTemplate = "@channel: %s pushups!";
 var ratio = process.env.RATIO || 2;
-var hours = (typeof process.env.HOURS !== 'undefined') ? process.env.HOURS.split(',') : [11, 14, 20];
+var hours = (typeof process.env.HOURS !== 'undefined') ? process.env.HOURS.split(',') : [11, 14, 17];
 var timezone = process.env.TIMEZONE || "America/New_York";
 var repos;
 
@@ -20,8 +20,6 @@ if (process.env.REPOS) {
 } else {
 	repos = []; // You may want to define repos here also.
 }
-
-console.log(process.env);
 
 var slack = new Slack(apiToken);
 var github = new GitHubApi({
@@ -108,9 +106,9 @@ function getRepos(callback) {
 	}, callback);
 }
 
-hours.forEach(function (hour) {//1-5
+hours.forEach(function (hour) {
 	job = new CronJob({
-		cronTime: '00 50 ' + hour + ' * * *',
+		cronTime: '00 00 ' + hour + ' * * 1-5',
 		onTick: run,
 		start: false,
 		timeZone: timezone
@@ -119,7 +117,7 @@ hours.forEach(function (hour) {//1-5
 });
 
 function run() {
-	console.log('started');
+	console.log('Started!');
 	getRepos(function (err, data) {
 		var arr = [];
 		data.forEach(function (items) {
