@@ -19,7 +19,7 @@ var repos;
 if (process.env.REPOS) {
 	repos = process.env.REPOS.split(',');
 } else {
-	repos = [];
+	repos = []; // You may want to define repos here also.
 }
 
 var slack = new Slack(apiToken);
@@ -98,7 +98,7 @@ function getRepos(callback) {
 hours.forEach(function (hour) {//1-5
 	console.log(hour);
 	job = new CronJob({
-		cronTime: '00 51 ' + hour + ' * * *',
+		cronTime: '00 00 ' + hour + ' * * *',
 		onTick: run
 	});
 	job.start();
