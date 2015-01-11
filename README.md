@@ -23,7 +23,7 @@ SLACK_API_TOKEN - required
 GITHUB_API_TOKEN - required
 REPOS - required. Uses comma-separated format. Eg. 'jutaz/swolebot,robinpowered'. You can specify repo, or whole ORG.
 SLACK_CHANNEL - required. Defaults to #general
-SLACK_ICON - An URL to Swolebot avatar, if you do not like default ones
+SLACK_ICON - An URL to Swolebot avatar, if you do not like default one
 SLACK_USERNAME - Meh. Default: Swolebot
 RATIO - Open PR to pushups ratio. Formula: open_PRs * ratio. Default: 2
 HOURS - On what hours this should run. Defaults to 11,14,17. Format: Comma-separated values
