@@ -1,5 +1,7 @@
 # swolebot
-A slack bot for keeping your team fit
+A Slack bot for keeping your team fit through open pull requests.
+
+!['swolebot in action'](http://robinpowered.s3.amazonaws.com/misc/swolebot.png)
 
 # Why?
 
