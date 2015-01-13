@@ -11,7 +11,7 @@ We @robinpowered wanted to stay healthy, so we started doing pushups based on op
 
 Clone
 ```
-git clone git@github.com:jutaz/swolebot.git
+git clone git@github.com:robinpowered/swolebot.git
 ```
 
 Create Heroku
@@ -23,7 +23,7 @@ Configure Heroku environment variables:
 ```
 SLACK_API_TOKEN - required
 GITHUB_API_TOKEN - required
-REPOS - required. Uses comma-separated format. Eg. 'jutaz/swolebot,robinpowered'. You can specify repo, or whole ORG.
+REPOS - required. Uses comma-separated format. Eg. 'rails/rails,robinpowered'. You can specify repo, or whole ORG.
 SLACK_CHANNEL - required. Defaults to #general
 SLACK_ICON - An URL to Swolebot avatar, if you do not like default one
 SLACK_USERNAME - Meh. Default: Swolebot
