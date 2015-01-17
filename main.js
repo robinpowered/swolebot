@@ -1,6 +1,7 @@
 var Slack = require('slack-node');
 var async = require('async');
 var GitHubApi = require("github");
+var pluralize = require('pluralize');
 var CronJob = require('cron').CronJob;
 var format = require('util').format;
 var q = require('q');
@@ -10,12 +11,14 @@ var githubApiToken = process.env.GITHUB_API_TOKEN;
 var channel = process.env.SLACK_CHANNEL || "#general";
 var slackIcon = process.env.SLACK_ICON || "http://4.bp.blogspot.com/-9TT2oDIQ00k/TqVViEko4HI/AAAAAAAAADU/svUOHDxP6UM/s1600/T-rex-hates-push-ups.jpg";
 var slackUsername = process.env.SLACK_USERNAME || "Swolebot";
-var messageTemplate = "@channel: %s pushups!";
+var messageTemplate = "@channel: %s %s!";
 var ratio = process.env.RATIO || 2;
 var hours = (typeof process.env.HOURS !== 'undefined') ? process.env.HOURS.split(',') : [11, 14, 17];
 var timezone = process.env.TIMEZONE || "America/New_York";
 var runInWeekends = (process.env.WEEKENDS) || false;
 var repos;
+
+var exercise = 'pushup';
 
 if (process.env.REPOS) {
 	repos = process.env.REPOS.split(',');
@@ -130,7 +133,7 @@ function run() {
 			amount += num;
 		});
 		amount = amount * ratio;
-		return postMessage(format(messageTemplate, amount));
+		return postMessage(format(messageTemplate, amount, pluralize(exercise, amount)));
 	}).then(function () {
 		console.log("Done!");
 	}).catch(function (err) {
