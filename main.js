@@ -296,5 +296,3 @@ hours.forEach(function (hour) {
 		timeZone: timezone
 	});
 });
-
-run();
