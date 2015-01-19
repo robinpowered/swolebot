@@ -33,7 +33,7 @@ var funMessages = [
 	':heart::cat2:?',
 	':clap::clap',
 	'Go play some :basketball:',
-	'With :love: from :moon:',
+	'With :heart: from :moon:',
 	'Make some :tea: today.',
 	getRandSlackUserName.bind(undefined, '%s did those faster than you did.'),
 	getRandSlackUserName.bind(undefined, '%s dont you cheat on me.'),
