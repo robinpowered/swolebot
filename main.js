@@ -12,7 +12,7 @@ var githubApiToken = process.env.GITHUB_API_TOKEN;
 var channel = process.env.SLACK_CHANNEL || "#general";
 var slackIcon = process.env.SLACK_ICON || "http://4.bp.blogspot.com/-9TT2oDIQ00k/TqVViEko4HI/AAAAAAAAADU/svUOHDxP6UM/s1600/T-rex-hates-push-ups.jpg";
 var slackUsername = process.env.SLACK_USERNAME || "Swolebot";
-var messageTemplate = "@channel: %s! %s";
+var messageTemplate = "@channel: %s Open Pull Requests (%s old). %s! %s";
 var ratio = process.env.RATIO || 1;
 var hours = (typeof process.env.HOURS !== 'undefined') ? process.env.HOURS.split(',') : [11, 14, 17];
 var timezone = process.env.TIMEZONE || "America/New_York";
@@ -170,14 +170,19 @@ function getPRs(user, repo, callback) {
 		state: 'open',
 		per_page: 100
 	}).then(function (data) {
-		var num = data.length;
+		var toReturn = {
+			prs: data.length,
+			old: 0,
+			num: data.length
+		};
 		var now = new Date().getTime();
 		data.forEach(function (pr) {
 			if (moment(pr.created_at).add(5, 'days').format('x') < now) {
-				num++;
+				toReturn.num++;
+				toReturn.old++;
 			}
 		});
-		return num;
+		return toReturn;
 	});
 }
 
@@ -265,21 +270,23 @@ function run() {
 	}).then(function (arr) {
 		return q.ninvoke(async, 'map', arr, function (data, callback) {
 			var str = data.split('/');
-			getPRs(str[0], str[1]).then(function (nums) {
-				callback(null, nums);
+			getPRs(str[0], str[1]).then(function (data) {
+				callback(null, data);
 			});
 		});
 	}).then(function (data) {
-		var amount = 0;
-		data.forEach(function (num) {
-			amount += num;
+		var amount = 0, prs = 0, old = 0;
+		data.forEach(function (repo) {
+			amount += repo.num;
+			prs += repo.prs;
+			old += repo.old;
 		});
 		if (!ratio && Array.isArray(exercises)) {
 			amount = amount * ratio;
 		}
-		return [compileExercise(amount), getFunMessage()];
-	}).spread(function(exercises, message) {
-		return postMessage(format(messageTemplate, exercises, (exercises.length > 0) ? message : ''));
+		return [prs, old, compileExercise(amount), getFunMessage()];
+	}).spread(function(prs, old, exercises, message) {
+		return postMessage(format(messageTemplate, prs, old, exercises, (exercises.length > 0) ? message : ''));
 	}).then(function () {
 		console.log("Done!");
 	}).catch(function (err) {
@@ -296,3 +303,5 @@ hours.forEach(function (hour) {
 		timeZone: timezone
 	});
 });
+
+run();
