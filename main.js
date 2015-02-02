@@ -5,6 +5,7 @@ var pluralize = require('pluralize');
 var moment = require('moment');
 var CronJob = require('cron').CronJob;
 var format = require('util').format;
+var restler = require('restler');
 var q = require('q');
 
 var apiToken = process.env.SLACK_API_TOKEN;
@@ -20,28 +21,7 @@ var runInWeekends = (process.env.WEEKENDS) || false;
 var repos, exercises;
 
 var funMessages = [
-	'Keep Pumping!',
-	ucFirst(slackUsername) + ' :heart: you.',
-	'Karma++.',
-	'Just a few to go.',
-	'Muscles++',
-	'Sweat away those pounds.',
-	'Do you like me?',
-	'`undefined is not a function`.',
-	'Abort, Retry, Fail?',
-	'Kernel Panic',
-	':heart::cat2:?',
-	':clap::clap:',
-	'Go play some :basketball:',
-	'With :heart: from :moon:',
-	'Make some :tea: today.',
-	getRandSlackUserName.bind(undefined, '%s did those faster than you did.'),
-	getRandSlackUserName.bind(undefined, '%s dont you cheat on me.'),
-	getRandSlackUserName.bind(undefined, '%s does double this time.'),
-	getRandSlackUserName.bind(undefined, 'Exept %s. They are free this time.'),
-	getRandSlackUserName.bind(undefined, '%s does not like jumping.'),
-	getRandSlackUserName.bind(undefined, '%s, did you just leveled up?.'),
-	getRandSlackUserName.bind(undefined, '%s did those faster than you did.')
+	getRandQuote
 ];
 
 if (process.env.EXERCISES) {
@@ -92,18 +72,26 @@ function getRandSlackUserName(msg) {
 		return q.ninvoke(slack, 'api', "users.info", {
 			user: user
 		});
-	}).then(function (user) {
-		var name;
-		user = user.user;
-		if (user.real_name) {
-			name = user.real_name;
-		} else {
-			name = '@' + user.name;
-		}
+	}).then(function (resp) {
+		var name = '@' + resp.user.name;
 		if (msg) {
 			return format(msg, name);
 		}
 		return name;
+	});
+}
+
+function getRandQuote() {
+	var def = q.defer();
+	restler.get('http://www.iheartquotes.com/api/v1/random', {
+		query: {
+			source: 'esr+humorix_misc+humorix_stories+joel_on_software+macintosh+math+mav_flame+osp_rules+paul_graham+prog_style+subversion',
+			format: 'json',
+			max_lines: 5
+		}
+	}).on('complete', def.resolve);
+	return def.promise.then(function (data) {
+		return '\n\n\n' + data.quote;
 	});
 }
 
