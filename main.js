@@ -31,7 +31,7 @@ var funMessages = [
 	'Abort, Retry, Fail?',
 	'Kernel Panic',
 	':heart::cat2:?',
-	':clap::clap',
+	':clap::clap:',
 	'Go play some :basketball:',
 	'With :heart: from :moon:',
 	'Make some :tea: today.',
