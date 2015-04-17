@@ -17,6 +17,7 @@ var messageTemplate = "@channel: %s Open Pull Requests (%s old). %s! %s";
 var ratio = process.env.RATIO || 1;
 var hours = (typeof process.env.HOURS !== 'undefined') ? process.env.HOURS.split(',') : [11, 14, 17];
 var timezone = process.env.TIMEZONE || "America/New_York";
+var quotesEnabled = process.env.QUOTES === 'true' ? true : false;
 var runInWeekends = (process.env.WEEKENDS) || false;
 var repos, exercises;
 
@@ -272,7 +273,7 @@ function run() {
 		if (!ratio && Array.isArray(exercises)) {
 			amount = amount * ratio;
 		}
-		return [prs, old, compileExercise(amount), getFunMessage()];
+		return [prs, old, compileExercise(amount), (quotesEnabled ? getFunMessage() : '')];
 	}).spread(function(prs, old, exercises, message) {
 		return postMessage(format(messageTemplate, prs, old, exercises, (exercises.length > 0) ? message : ''));
 	}).then(function () {
