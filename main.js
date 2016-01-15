@@ -10,7 +10,7 @@ var githubApiToken = process.env.GITHUB_API_TOKEN;
 var channel = process.env.SLACK_CHANNEL || "#general";
 var slackIcon = process.env.SLACK_ICON || "http://4.bp.blogspot.com/-9TT2oDIQ00k/TqVViEko4HI/AAAAAAAAADU/svUOHDxP6UM/s1600/T-rex-hates-push-ups.jpg";
 var slackUsername = process.env.SLACK_USERNAME || "Swolebot";
-var messageTemplate = "@channel: %s pushups!";
+var messageTemplate = "@channel: We have %s open pull-requests that's %s pushups for everybody!";
 var ratio = process.env.RATIO || 2;
 var hours = (typeof process.env.HOURS !== 'undefined') ? process.env.HOURS.split(',') : [11, 14, 17];
 var timezone = process.env.TIMEZONE || "America/New_York";
@@ -129,8 +129,7 @@ function run() {
 		data.forEach(function (num) {
 			amount += num;
 		});
-		amount = amount * ratio;
-		return postMessage(format(messageTemplate, amount));
+		return postMessage(format(messageTemplate, amount, amount * ratio));
 	}).then(function () {
 		console.log("Done!");
 	}).catch(function (err) {
