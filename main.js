@@ -126,13 +126,10 @@ function run() {
 		});
 	}).then(function (data) {
 		var amount = 0;
-		var prs = 0;
 		data.forEach(function (num) {
 			amount += num;
 		});
-		prs = amount;
-		amount = amount * ratio;
-		return postMessage(format(messageTemplate, prs, amount));
+		return postMessage(format(messageTemplate, amount, amount * ratio));
 	}).then(function () {
 		console.log("Done!");
 	}).catch(function (err) {
