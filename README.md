@@ -11,7 +11,7 @@ We @robinpowered wanted to stay healthy, so we started doing pushups based on op
 
 Clone
 ```
-git clone git@github.com:robinpowered/swolebot.git
+git clone https://github.com/robinpowered/swolebot.git
 ```
 
 Create Heroku
